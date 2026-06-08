@@ -41,7 +41,6 @@ import (
 	"google.golang.org/adk/model/gemini"
 	"google.golang.org/adk/runner"
 	"google.golang.org/adk/session"
-	sessioninmemory "google.golang.org/adk/session/inmemory"
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/geminitool"
 	"google.golang.org/genai"
@@ -68,7 +67,7 @@ func main() {
 		log.Fatalf("Failed to create agent: %v", err)
 	}
 
-	sessSvc := sessioninmemory.NewService()
+	sessSvc := session.InMemoryService()
 	r, err := runner.New(runner.Config{
 		AppName:        "tutorial",
 		Agent:          a,
@@ -92,15 +91,19 @@ func main() {
 		if input == "quit" {
 			break
 		}
-		for event, err := range r.Run(ctx, userID, sessionID, genai.NewPartFromText(input), agent.RunOptions{}) {
+		msg := genai.NewContentFromText(input, genai.RoleUser)
+		for event, err := range r.Run(ctx, userID, sessionID, msg, agent.RunConfig{}) {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				break
 			}
-			if event.Partial {
+			if event.LLMResponse.Content == nil {
 				continue
 			}
-			for _, p := range event.LLMResponse.Content().Parts {
+			if event.LLMResponse.Partial {
+				continue
+			}
+			for _, p := range event.LLMResponse.Content.Parts {
 				fmt.Print(p.Text)
 			}
 		}
