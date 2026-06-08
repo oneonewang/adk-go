@@ -29,7 +29,7 @@
 | `internal/plugininternal` | `plugin_manager.go:38,44,76,93,222,239,256,273,286` | 13 类 `RunXxxCallback`，依次执行已注册插件的回调（任一返回非 nil 即短路），`ToContext` 注入 ctx |
 | `internal/plugininternal/plugincontext` | — | `PluginManagerCtxKey` ctx key |
 | `internal/sessionutils` | `utils.go:22` | 状态 delta 拆分/合并（`appPrefix`/`userPrefix`/`tempPrefix` 三个常量） |
-| `internal/telemetry` | `telemetry.go:54,67,99,148,165,239,244,259`、`logger.go:33,56,69` | OTel tracer + 日志桥（OTel semconv v1.36.0）：`StartInvokeAgentSpan`/`StartGenerateContentSpan`/`StartExecuteToolSpan`；`LogRequest`/`LogResponse` 发 `gen_ai.*` event；`genAICaptureMessageContent atomic.Bool` 切换明文/脱敏 |
+| `internal/telemetry` | `internal/telemetry/telemetry.go:54,67,99,148,165,239,244,259`、`internal/telemetry/logger.go:33,56,69` | OTel tracer + 日志桥（OTel semconv v1.36.0）：`StartInvokeAgentSpan`/`StartGenerateContentSpan`/`StartExecuteToolSpan`；`LogRequest`/`LogResponse` 发 `gen_ai.*` event；`genAICaptureMessageContent atomic.Bool` 切换明文/脱敏 |
 | `internal/testutil` | `test_agent_runner.go`、`genai.go:64` | `TestAgentRunner` + `MockModel` + `CollectEvents/CollectParts/CollectTextParts` + gemini record/replay 工厂 |
 | `internal/toolinternal` | `tool.go:28,42` | 扩展 `tool.Tool` 的内部接口：`Declaration`/`Run`/`RunStream`/`ProcessRequest`（让 LLM 工具在 preprocess 阶段贡献请求字段） |
 | `internal/toolinternal/toolutils` | `toolutils.go` | `PackTool` 工具 |
@@ -112,7 +112,7 @@ internal 包**不向用户公开扩展点**。`configurable.Register` / `Registe
 
 ## 7. 错误处理与并发
 
-**错误约定**：`internal/llminternal/base_flow.go:48` 定义唯一 sentinel `ErrModelNotConfigured`（`errors.New("model not configured; ensure Model is set in llmagent.Config")`），`runOneStep` 入口检查（`base_flow.go:530-533`）。`parentmap.New` 在父子冲突或名称重复时返回 `fmt.Errorf`（`internal/agent/parentmap/map.go:38,41`）。`newToolNotFoundError`（`internal/llminternal/base_flow.go:970`）输出 Python 风格诊断信息，列出可用工具 + 排查建议。`contents_processor.go:251,269,433-449,463` 对畸形 history（call/response ID 不匹配、空合并事件等）显式报错。`configurable_utils.go:244,257,267,277,319,329,346,360,366` 把所有注册/解析错误集中 `fmt.Errorf("%w", err)` 包装。`httprr.Open` 在 `testutil.genai.go:34` 用 `fmt.Errorf("httprr.Open(%q) failed: %w", ...)` 包装。
+**错误约定**：`internal/llminternal/base_flow.go:48` 定义唯一 sentinel `ErrModelNotConfigured`（`errors.New("model not configured; ensure Model is set in llmagent.Config")`），`runOneStep` 入口检查（`base_flow.go:530-533`）。`parentmap.New` 在父子冲突或名称重复时返回 `fmt.Errorf`（`internal/agent/parentmap/map.go:38,41`）。`newToolNotFoundError`（`internal/llminternal/base_flow.go:970`）输出 Python 风格诊断信息，列出可用工具 + 排查建议。`contents_processor.go:251,269,433-449,463` 对畸形 history（call/response ID 不匹配、空合并事件等）显式报错。`configurable_utils.go:244,257,267,277,319,329,346,360,366` 把所有注册/解析错误集中 `fmt.Errorf("%w", err)` 包装。`httprr.Open` 在 `internal/testutil/genai.go:34` 用 `fmt.Errorf("httprr.Open(%q) failed: %w", ...)` 包装。
 
 **并发模型**：
 
@@ -161,13 +161,13 @@ graph LR
     remoteagentv2 --> utils
 ```
 
-看图指引：反向引用集中在 `agent`、`runner`、`session`、`plugin`、`server/adka2a/v2`、`cmd/launcher` 等公共包。`internal/llminternal` 是被引用最多的叶子（出现在 `runner.go`、`inmemory.go`、所有 `llmagent/workflowagents/remoteagent` 实现、`server/adka2a/v2`）。`internal/telemetry` 是公共 `telemetry` 包的 OTel 实现细节（`telemetry.go:54-58` 通过 `otel.GetTracerProvider()` 共享全局 tracer）。外部仓库无法 import 任何 internal 子包，这是 Go 私有命名空间强制保证的包边界。
+看图指引：反向引用集中在 `agent`、`runner`、`session`、`plugin`、`server/adka2a/v2`、`cmd/launcher` 等公共包。`internal/llminternal` 是被引用最多的叶子（出现在 `runner.go`、`inmemory.go`、所有 `llmagent/workflowagents/remoteagent` 实现、`server/adka2a/v2`）。`internal/telemetry` 是公共 `telemetry` 包的 OTel 实现细节（`internal/telemetry/telemetry.go:54-58` 通过 `otel.GetTracerProvider()` 共享全局 tracer）。外部仓库无法 import 任何 internal 子包，这是 Go 私有命名空间强制保证的包边界。
 
 ## 9. 测试与可观察性
 
 - 风格/版权检查：`internal/style_test.go`（`package internal_test`）在 `chdir ..` 后 walk 整个 repo，检查 `Copyright 2025..` Apache 2.0 头（支持 `-fix` 模式补全），白名单 `internal/jsonschema`、`internal/util`、`internal/httprr`、`vendor`。
 - 各子包均有 `_test.go`：`internal/context/context_test.go`；`internal/llminternal/*_test.go`（agent_transfer / audio_cache_manager / base_flow / base_flow_telemetry / contents_processor / handle_function_calls_async / identity_request_processor / instruction_processor / outputschema_processor / parallel_function_call / request_confirmation_processor / stream_aggregator / streaming_tool / functions / clone / helpers）；`internal/memory/memory_test.go`；`internal/utils/{utils_test.go,schema_test.go}`；`internal/artifact/artifacts_test.go`；`internal/artifact/tests/service_suite.go`（公共 service 兼容性套件）；`internal/httprr/rr_test.go`；`internal/telemetry/{telemetry_test.go,logger_test.go,converters_test.go}`；`internal/configurable/conformance/{replayplugin,recordplugin}/*_test.go`。
-- Telemetry 埋点（OTel semconv v1.36.0）位于 `internal/telemetry/telemetry.go`：`StartInvokeAgentSpan`（`telemetry.go:67`，span 名 `invoke_agent <name>`）、`StartGenerateContentSpan`（`telemetry.go:99`，`generate_content <model>`）、`StartExecuteToolSpan`（`telemetry.go:148`，`execute_tool <tool>`）；`TraceToolResult`（`telemetry.go:165`）/ `TraceMergedToolCallsResult`（`telemetry.go:244`）写 `gcp.vertex.agent.event_id` + `gen_ai.tool.call.id` + `gcp.vertex.agent.tool_response`。`LogRequest`（`logger.go:56`）/`LogResponse`（`logger.go:69`）发 `gen_ai.system.message`/`gen_ai.user.message`/`gen_ai.choice` event；logger 名称 `gcp.vertex.agent`，schema URL `semconv/v1.36.0`。`WrapYield`（`telemetry.go:223`）包装 `iter.Seq2` yield，span 在 yield 返回时关闭。`llminternal` 内的调用点：`base_flow.go:811 generateContent` 启动 span、`base_flow.go:1018` 并行 tool 启动 `execute_tool (merged)`、`base_flow.go:1034,1165` 每 tool 启动子 span、`base_flow.go:848` 流式 `LogResponse`、`base_flow.go:372` 记录 resumption handle。
+- Telemetry 埋点（OTel semconv v1.36.0）位于 `internal/telemetry/telemetry.go`：`StartInvokeAgentSpan`（`internal/telemetry/telemetry.go:67`，span 名 `invoke_agent <name>`）、`StartGenerateContentSpan`（`internal/telemetry/telemetry.go:99`，`generate_content <model>`）、`StartExecuteToolSpan`（`internal/telemetry/telemetry.go:148`，`execute_tool <tool>`）；`TraceToolResult`（`internal/telemetry/telemetry.go:165`）/ `TraceMergedToolCallsResult`（`internal/telemetry/telemetry.go:244`）写 `gcp.vertex.agent.event_id` + `gen_ai.tool.call.id` + `gcp.vertex.agent.tool_response`。`LogRequest`（`internal/telemetry/logger.go:56`）/`LogResponse`（`internal/telemetry/logger.go:69`）发 `gen_ai.system.message`/`gen_ai.user.message`/`gen_ai.choice` event；logger 名称 `gcp.vertex.agent`，schema URL `semconv/v1.36.0`。`WrapYield`（`internal/telemetry/telemetry.go:223`）包装 `iter.Seq2` yield，span 在 yield 返回时关闭。`llminternal` 内的调用点：`base_flow.go:811 generateContent` 启动 span、`base_flow.go:1018` 并行 tool 启动 `execute_tool (merged)`、`base_flow.go:1034,1165` 每 tool 启动子 span、`base_flow.go:848` 流式 `LogResponse`、`base_flow.go:372` 记录 resumption handle。
 
 ## 10. 延伸阅读
 

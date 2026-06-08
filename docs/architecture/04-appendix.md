@@ -258,6 +258,23 @@ graph LR
 7. **本附录未覆盖测试目录**：测试文件索引（如 `*_test.go` 与 `testdata/`）建议由后续子项目 12+ 维护者补充，避免本文档膨胀。
 8. **章节内嵌的图均使用 Mermaid**：Mermaid 的版本差异可能导致边距或箭头方向略有不同，建议维护者在合入前用 GitHub Markdown 预览或本地 mmdc 渲染验证。
 
+### A.5.6 跨文档审查发现（2026-06-08）
+
+最终一致性审查中发现并修复的问题清单（仅作记录，已修复）：
+
+1. **Mermaid 语法修复**：`03-modules/10-server.md` F4（Pub/Sub 重试）时序图原本把"成功 / 429 / 其它错误"写成嵌套 `alt` + `alt`，是错误结构（应有 1 个 `alt` + 2 个 `else` + 1 个 `end`）。已修复为 `alt 成功 / else 429/ResourceExhausted / else 其它错误 / end`。
+2. **file:line 引用语义修正**（共 8 处）：
+   - `01-core-flows.md` F4：把"vertexai 走 `Partial==true` 短路"这一**错误**描述（vertexai 后端实际不做 partial 判断）改为"vertexai 后端走 `AppendEvent`（`session/vertexai/vertexai.go:129`）直接调 client 写入远程仓库"。
+   - `01-core-flows.md`、`03-modules/05-session.md`、`03-modules/11-internal.md`：把裸 `telemetry.go:NNN` 改为完整路径 `internal/telemetry/telemetry.go:NNN`（避免与公开 `telemetry/telemetry.go` 冲突，引用均落在 265 行的内部实现文件中）。
+   - `03-modules/11-internal.md`：`testutil.genai.go:34` → `internal/testutil/genai.go:34`（文件实际位于 `internal/testutil/`）。
+   - `03-modules/10-server.md`：`executor.go:430` → `server/adka2a/v2/executor.go:430`（v1 旧 executor.go 只有 408 行，函数实际定义在 v2 的 459 行文件中）。
+   - `03-modules/10-server.md` / `02-extension-points.md`：`task_artifact.go:30`（空行）→ `task_artifact.go:38,88`（`eventToArtifactTransform` 实际被 `*artifactMaker` 与 `*legacyArtifactMaker` 断言的位置）。
+   - `03-modules/08-plugin.md`：`(plugin.go:79)` → `plugin.go:79-80`（L79 为空行，`maps.Copy` 实际在 L80）。
+   - `03-modules/08-plugin.md`：`plugincontext/context.go:19`（显示文本）→ `internal/plugininternal/plugincontext/context.go:19`（明确路径，避免被误解析为 `agent/context.go`）。
+3. **交叉链接修复 1 处**：`03-modules/05-session.md` 把 `./01-core-flows.md` 改为 `../01-core-flows.md`（子目录间上跳一级）。
+4. **bare 文件名引用的歧义**（已记录，**未**改文本）：文档中存在 1 处 `agent/context.go:19` 形式的链接显示文本（实为 `internal/plugininternal/plugincontext/context.go:19` 的缩写）。后续维护者补全路径即可。当前已通过 03-modules/08-plugin.md §5 "plugincontext.PluginManagerCtxKey" 小节标题中的完整路径消歧。
+5. **公开 `telemetry/telemetry.go` 与 `internal/telemetry/telemetry.go` 命名相同**：本审查中发现 9 处裸 `telemetry.go:NNN` 引用，初次静态分析会落到 125 行的公开文件（导致 L148+ 全部"超界"）。已全部添加 `internal/` 前缀以明确指向 265 行的内部实现文件。建议后续引用全部使用完整路径。
+
 ### A.5.5 文档版本号策略
 
 - 与锁定 commit SHA 强绑定。

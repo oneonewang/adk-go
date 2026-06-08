@@ -425,7 +425,7 @@ v2.NewExecutor(v2.ExecutorConfig{
 })
 ```
 
-`OutputMode`（`executor.go:60-70`）通过 `eventToArtifactTransform`（`server/adka2a/v2/task_artifact.go:30`）决定 artifact id 分配策略；两种实现 `artifactMaker`（`task_artifact.go:26`）和 `legacyArtifactMaker`（`task_artifact.go:70`）对应不同行为。
+`OutputMode`（`executor.go:60-70`）通过 `eventToArtifactTransform`（`server/adka2a/v2/task_artifact.go:38,88`）决定 artifact id 分配策略；两种实现 `artifactMaker`（`task_artifact.go:26`）和 `legacyArtifactMaker`（`task_artifact.go:70`）对应不同行为。
 
 ### 8.2 REST
 

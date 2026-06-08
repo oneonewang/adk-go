@@ -149,7 +149,7 @@ type PluginManager struct {
 
 模板渲染上下文，包含 `ToolName / ErrorDetails / ArgsSummary / RetryCount / MaxRetries` 5 字段；被两个 `//go:embed` 进来的 `.md` 模板共用（`reflection.md` 用于重试中，`exceeded.md` 用于超过上限）。
 
-### plugincontext.PluginManagerCtxKey（plugincontext/context.go:19）
+### plugincontext.PluginManagerCtxKey（internal/plugininternal/plugincontext/context.go:19）
 
 把 `*PluginManager` 塞进 `context.Context` 的 ctxKey，runner 通过 `ToContext` 注入（[plugin_manager.go:286-288](file:///home/wu/oneone/adk/internal/plugininternal/plugin_manager.go#L286)），让深层 agent / tool 也能拿到 manager。
 
@@ -252,7 +252,7 @@ flowchart LR
     M --> N[返回 nil, nil]
 ```
 
-> **看图指引**：`BeforeModel` 必须返回 `nil, nil`（而不是空 `*model.LLMResponse{}`），否则会让 runner 误以为模型"已经被处理过"（参见 [functioncallmodifier/plugin.go:87, 118](file:///home/wu/oneone/adk/plugin/functioncallmodifier/plugin.go#L87)）。这是常见踩坑点。`maps.Copy` 是浅拷贝，复制的是 schema 指针，零序列化开销（[plugin.go:79](file:///home/wu/oneone/adk/plugin/functioncallmodifier/plugin.go#L79)）。
+> **看图指引**：`BeforeModel` 必须返回 `nil, nil`（而不是空 `*model.LLMResponse{}`），否则会让 runner 误以为模型"已经被处理过"（参见 [functioncallmodifier/plugin.go:87, 118](file:///home/wu/oneone/adk/plugin/functioncallmodifier/plugin.go#L87)）。这是常见踩坑点。`maps.Copy` 是浅拷贝，复制的是 schema 指针，零序列化开销（[plugin.go:79-80](file:///home/wu/oneone/adk/plugin/functioncallmodifier/plugin.go#L79)）。
 
 ### 流程 5：plugin 关闭
 

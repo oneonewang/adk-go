@@ -360,7 +360,7 @@ sequenceDiagram
         alt 成功
             R-->>RR: events
             RR-->>PC: events
-        alt 429/ResourceExhausted
+        else 429/ResourceExhausted
             R-->>RR: error
             RR->>RR: calculateBackoff (base*2^i + jitter)
             RR-->>RR: sleep
@@ -381,10 +381,10 @@ sequenceDiagram
 
 ### 5.1 A2A 端扩展点
 
-- **`RunnerProvider`**（`server/adka2a/v2/executor.go:81`）—— 替换默认 runner 创建逻辑。`newDefaultRunnerProvider`（`executor.go:430`）默认调用 `runner.New` 并把 `executorPlugin` 装到 `PluginConfig.Plugins` 上。用户实现自己的 provider 时**必须**保留 `executorPlugin` 注入，否则 `ExecutorContext` 内的 `Events()` / `ReadonlyState()` 拿不到 session。
+- **`RunnerProvider`**（`server/adka2a/v2/executor.go:81`）—— 替换默认 runner 创建逻辑。`newDefaultRunnerProvider`（`server/adka2a/v2/executor.go:430`）默认调用 `runner.New` 并把 `executorPlugin` 装到 `PluginConfig.Plugins` 上。用户实现自己的 provider 时**必须**保留 `executorPlugin` 注入，否则 `ExecutorContext` 内的 `Events()` / `ReadonlyState()` 拿不到 session。
 - **4 个生命周期回调**（`server/adka2a/v2/executor.go:37-57`）—— `BeforeExecuteCallback` / `AfterEventCallback` / `AfterExecuteCallback` / `A2AExecutionCleanupCallback`。`BeforeExecuteCallback` 返回 error 即中止 Execute；`AfterEventCallback` 拿到 a2a 事件后可丰富 metadata 或返回 error 中止；`A2AExecutionCleanupCallback` 在 `Cleanup` 路径被调用，缺省时 `log.Warn`。
 - **`A2APartConverter` / `GenAIPartConverter`**（`server/adka2a/v2/executor.go:49-54`）—— 自定义 part 序列化。返回 `(_, false)` 表示丢弃该 part。
-- **`OutputMode`**（`server/adka2a/v2/executor.go:60-70`）—— 通过 `eventToArtifactTransform`（`server/adka2a/v2/task_artifact.go:30`）扩展 artifact 行为；如需新策略可实现 `eventToArtifactTransform` 接口。
+- **`OutputMode`**（`server/adka2a/v2/executor.go:60-70`）—— 通过 `eventToArtifactTransform`（`server/adka2a/v2/task_artifact.go:38,88`）扩展 artifact 行为；如需新策略可实现 `eventToArtifactTransform` 接口。
 - **`BuildAgentSkills`**（`server/adka2a/v2/agent_card.go:33`）—— agent card 的 skills 列表生成入口；doc 没说可注入，但通过实现新的 `iagent.Agent` / `llminternal.Agent` 可自动扩展。
 
 ### 5.2 REST 端扩展点
