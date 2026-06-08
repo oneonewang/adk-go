@@ -2,7 +2,7 @@
 
 > **锁定 commit**：`d06992e2b1ec2c9b95c6070e0fd12d50a43e4c99`
 >
-> 本教程基于上述 commit编写，与姐妹文档 [`docs/architecture/`](../../architecture/)互引。开始前请确保读完本篇再进入 [`01-getting-started/`](./01-getting-started/)入门层。
+> 本教程基于上述 commit编写，与姐妹文档 [`docs/architecture/`](../architecture/)互引。开始前请确保读完本篇再进入 [`01-getting-started/`](./01-getting-started/)入门层。
 
 本篇帮助你在15 分钟内把开发环境准备就绪。学完后你应当能：
 
@@ -303,4 +303,4 @@ sequenceDiagram
 4. [`01-getting-started/04-multi-agents.md`](./01-getting-started/04-multi-agents.md) ——组合 Agent
 5. [`01-getting-started/05-run-as-server.md`](./01-getting-started/05-run-as-server.md) —— REST 服务
 
->教程入口与依赖图见 [`README.md`](./README.md)。架构层面的解释见 [`docs/architecture/00-overview.md`](../../architecture/00-overview.md)。
+>教程入口与依赖图见 [`README.md`](./README.md)。架构层面的解释见 [`docs/architecture/00-overview.md`](../architecture/00-overview.md)。
