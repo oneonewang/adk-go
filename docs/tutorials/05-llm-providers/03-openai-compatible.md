@@ -239,11 +239,11 @@ type LLM interface {
 
 ### 3. `buildRequest`：ADK `*genai.Content` → OpenAI `messages`
 
-`genai.Role` 的合法值是 `"user"` 与 `"model"`（[types.go:1528](../../../types.go)），OpenAI 的合法值是 `"user"` / `"assistant"` / `"system"` / `"tool"`。转换时**只翻译这两条**——`"system"` 在 ADK 里走 `llmagent.Config.Instruction`（不在 `req.Contents` 里），所以这里不会遇到。把同一个 `Content` 下的所有 `Text` part 拼成一条 `message.content`——OpenAI 协议不支持多模态数组，除非用扩展字段。本教程**只支持纯文本**，多模态留给升级路径。
+`genai.Role` 的合法值是 `"user"` 与 `"model"`（`google.golang.org/genai` 包常量），OpenAI 的合法值是 `"user"` / `"assistant"` / `"system"` / `"tool"`。转换时**只翻译这两条**——`"system"` 在 ADK 里走 `llmagent.Config.Instruction`（不在 `req.Contents` 里），所以这里不会遇到。把同一个 `Content` 下的所有 `Text` part 拼成一条 `message.content`——OpenAI 协议不支持多模态数组，除非用扩展字段。本教程**只支持纯文本**，多模态留给升级路径。
 
 ### 4. `parseResponse`：OpenAI 响应 → `*model.LLMResponse`
 
-`genai.NewContentFromText` 在 [types.go:1551](../../../types.go)；`Partial=false` / `TurnComplete=true` 的组合告诉 runner "**这是一段完整答案，不要再合并**"——runner 据此把这段写进 session 历史。流式路径下，最后一个 chunk 才设 `TurnComplete=true`，中间 chunk 设 `Partial=true`——这与 `geminiModel.generateStream` 的 `llminternal.NewStreamingResponseAggregator` 行为一致（[gemini.go:141-160](../../../model/gemini/gemini.go)）。
+`genai.NewContentFromText` 来自 `google.golang.org/genai`；`Partial=false` / `TurnComplete=true` 的组合告诉 runner "**这是一段完整答案，不要再合并**"——runner 据此把这段写进 session 历史。流式路径下，最后一个 chunk 才设 `TurnComplete=true`，中间 chunk 设 `Partial=true`——这与 `geminiModel.generateStream` 的 `llminternal.NewStreamingResponseAggregator` 行为一致（[model/gemini/gemini.go:141-160](../../../model/gemini/gemini.go)）。
 
 ## 准备与运行
 
@@ -308,8 +308,8 @@ go run ./examples/openaiadapter/        # 打印 ready 横幅
 | `model.LLM` | [model/llm.go:26](../../../model/llm.go) | ADK 的"模型抽象接口" |
 | `model.LLMRequest` | [model/llm.go:32](../../../model/llm.go) | ADK → 适配器的请求结构（`Model` / `Contents` / `Config`） |
 | `model.LLMResponse` | [model/llm.go:42](../../../model/llm.go) | 适配器 → ADK 的响应结构（`Content` / `Partial` / `TurnComplete`） |
-| `genai.Content` / `genai.Part` | [types.go:1517](../../../types.go) / [types.go:1381](../../../types.go) | ADK 的"消息 + 段"载体 |
-| `genai.NewContentFromText` | [types.go:1551](../../../types.go) | 用 `text` + `role` 构造 `*genai.Content` |
+| `genai.Content` / `genai.Part` | `google.golang.org/genai` | ADK 的"消息 + 段"载体 |
+| `genai.NewContentFromText` | `google.golang.org/genai` | 用 `text` + `role` 构造 `*genai.Content` |
 | `iter.Seq2[K, V]` | [pkg.go.dev/iter](https://pkg.go.dev/iter) | Go 1.23+ 的延迟推送序列（`yield` 闭包） |
 | `geminiModel.GenerateContent` | [model/gemini/gemini.go:88](../../../model/gemini/gemini.go) | 对照参考：官方适配器如何实现 `iter.Seq2` |
 | `apigeeModel.GenerateContent` | [model/apigee/apigee.go:130](../../../model/apigee/apigee.go) | 对照参考：纯代理型 adapter 只需透传 `delegate` |
