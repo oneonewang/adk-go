@@ -256,4 +256,4 @@ User: What is 2+2?
 - 源码：[`model/gemini/gemini.go`](../../../model/gemini/gemini.go) —— 本教程拆解的全部代码
 - 源码：[`model/llm.go`](../../../model/llm.go) —— `model.LLM` 接口的最小定义
 - 子项目深读占位：gemini 适配器的 `mergeHeadersInterceptor` 与 `maybeAppendUserContent`（前者是 SDK 集成层、后者是"无用户输入也能调"边界条件），将并入后续 `model` 模块深读文档
-- 下一教程：[02-apigee.md](./02-apigee.md) —— 当你需要经过 Apigee 网关调用 Gemini 时
+- 下一教程：[02-apigee-gateway.md](./02-apigee-gateway.md) —— 当你需要经过 Apigee 网关调用 Gemini 时

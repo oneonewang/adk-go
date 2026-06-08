@@ -342,4 +342,4 @@ User: 那我今天去北京出差要带伞吗？
 - [架构文档：F2 工具调用流程](../../architecture/01-core-flows.md#f2工具调用)
 - [examples/tools/multipletools/main.go](../../../examples/tools/multipletools/main.go) —— 同款思路：把不能共存的 tool 类型拆到不同子 agent
 - [tool/agenttool/agent_tool_test.go](../../../tool/agenttool/agent_tool_test.go) —— `agenttool` 的官方合约测试，含 InputSchema/OutputSchema 校验示例
-- 子项目深读占位：自定义 Tool 进阶（带 artifact / memory 访问）见 [02-tools/03-advanced.md](./03-advanced.md)（占位）
+- 自定义 Tool 进阶（带 artifact / memory 访问）见 [02-tools/06-load-artifacts.md](./06-load-artifacts.md) 与 [02-tools/07-load-memory.md](./07-load-memory.md)

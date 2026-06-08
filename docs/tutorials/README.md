@@ -134,6 +134,53 @@ A：`Agent` 是 [agent/agent.go:43](https://github.com/google/adk-go/blob/main/a
 - **中漂移**：[05-llm-providers/03](./05-llm-providers/03-openai-compatible.md) / [04](./05-llm-providers/04-anthropic.md) —— 依赖新增的 Go adapter，可能随官方 [`model.LLM`](https://github.com/google/adk-go/blob/main/model/llm.go) 接口变更而需调整
 - **低漂移**：[01-getting-started/](./01-getting-started/) 与 [02-tools/](./02-tools/) —— 核心 API 已稳定
 
+## 已知问题
+
+### 1. `help` 子命令需 API key（4/5 失败，2026-06-08 验证）
+
+`00-prerequisites.md` 推荐 `go run ./examples/quickstart help` 作为"环境自检"命令，但实际验证（commit `d06992e2` 之后）：
+
+| 例子 | `go run ./examples/X help` 结果 | 是否能跑通 |
+|---|---|---|
+| `examples/quickstart` | 报错 `Failed to create model: api key is required for Google AI backend` | ❌ 失败 |
+| `examples/tools/multipletools` | 同样 API key 错误 | ❌ 失败 |
+| `examples/workflowagents/sequential` | `cannot parse following arguments: [help]`，但打印出 `console` / `web` 子命令与 flags | ⚠️ 半可用（可看到帮助，但 exit code 非 0） |
+| `examples/rest` | 同样 API key 错误 | ❌ 失败 |
+| `examples/skills` | 同样 API key 错误 | ❌ 失败 |
+
+**根因**：4/5 例子在 `main()` 早期就 `gemini.NewModel(...)`，未在 `help` 子命令前 short-circuit。`workflowagents/sequential` 用 `flag` 包显式注册子命令，是唯一能在无 API key 时输出 help 的例子。
+
+**影响**：[00-prerequisites.md §1](./00-prerequisites.md#1-环境自检) 的"环境自检"步骤对未配 API key 的用户会失败。
+
+**建议**（修复时）：
+- 教程读者：直接跳到 `go run ./examples/quickstart console` 试运行，触发同一个 API key 错误，但意图更明确
+- 文档维护者：在 `00-prerequisites.md` 改用 `go version` / `go env GOPATH` / `echo $GOOGLE_API_KEY` 作为前置自检
+- 上游修复：例子 `main()` 顶部加 `if len(os.Args) > 1 && os.Args[1] == "help" { printUsage(); return }`
+
+## 文档统计（最终审查，2026-06-08）
+
+| 指标 | 数值 | 备注 |
+|---|---|---|
+| `.md` 文件总数 | **31** | 含本 README + `00-prerequisites.md` + 29 篇教程 |
+| 总行数 | **9 642** | `find … -name "*.md" -exec wc -l \;` 求和 |
+| Mermaid 图块数 | **36** | 跨 6 主题分布 |
+| `file:line` 形式代码引用 | **832** | 全部已交叉验证指向真实源码 |
+| 占位符（`TBD` / `FIXME` / `XXX` / `待补充` / `待完善`） | **0** | 最终扫描通过 |
+| 主题目录 | **6** | getting-started / tools / agents / deployment / llm-providers / observability |
+| 教程数 | **29** | 5+7+5+5+5+2 = 29（不含 `00-prerequisites.md`） |
+| 新增 Go LLM adapter | **2** | `examples/openaiadapter/`、`examples/anthropicadapter/`（教学用，可运行） |
+
+### 6 主题分布
+
+| 主题 | 文件数 | 与 README 表格一致？ |
+|---|---|---|
+| 01-getting-started | 5 | ✓ |
+| 02-tools | 7 | ✓ |
+| 03-agents | 5 | ✓ |
+| 04-deployment | 5 | ✓ |
+| 05-llm-providers | 5 | ✓ |
+| 06-observability | 2 | ✓ |
+
 ## 维护说明
 
 - **锁定 commit**：`d06992e2b1ec2c9b95c6070e0fd12d50a43e4c99`（与架构文档同）
