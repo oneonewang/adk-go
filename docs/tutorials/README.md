@@ -126,7 +126,7 @@ A：见 [05-llm-providers/03-openai-compatible.md](./05-llm-providers/03-openai-
 A：报告 issue；本教程基于 commit `d06992e2b1ec2c9b95c6070e0fd12d50a43e4c99` 锁定，漂移超出该 commit 后需重新校对。
 
 **Q5：`agent.Agent` 接口和 `llmagent.LLMAgent` 的关系？**
-A：`Agent` 是 [agent/agent.go:43](https://github.com/google/adk-go/blob/main/agent/agent.go) 定义的核心接口，所有实现（含 LLM Agent、Sequential / Parallel / Loop）都必须实现它。`llmagent` 是最常用的具体实现，定义在 `agent/llmagent/llmagent.go`。详见 [../../architecture/00-overview.md](../../architecture/00-overview.md) 与 [../../architecture/03-modules/01-agent.md](../../architecture/03-modules/01-agent.md)。
+A：`Agent` 是 [agent/agent.go:43](https://github.com/google/adk-go/blob/main/agent/agent.go) 定义的核心接口，所有实现（含 LLM Agent、Sequential / Parallel / Loop）都必须实现它。`llmagent` 是最常用的具体实现，定义在 `agent/llmagent/llmagent.go`。详见 [../architecture/00-overview.md](../architecture/00-overview.md) 与 [../architecture/03-modules/01-agent.md](../architecture/03-modules/01-agent.md)。
 
 ## 已知漂移风险
 
@@ -184,7 +184,7 @@ A：`Agent` 是 [agent/agent.go:43](https://github.com/google/adk-go/blob/main/a
 ## 维护说明
 
 - **锁定 commit**：`d06992e2b1ec2c9b95c6070e0fd12d50a43e4c99`（与架构文档同）
-- **姐妹文档**：[docs/architecture/](../../architecture/)（子项目 0）—— 解释"为什么这样设计"
+- **姐妹文档**：[docs/architecture/](../architecture/)（子项目 0）—— 解释"为什么这样设计"
 - **代码示例**：教程代码精简版教学用；可运行完整版见 [examples/](https://github.com/google/adk-go/tree/main/examples)
 - **每个教程结尾的"延伸阅读"** 指明对应的架构文档章节
 - **贡献**：增改教程请保持 H1 标题 + "你将学到 / 前置条件 / 完整代码 / 代码逐段讲解 / 准备与运行 / 常见错误 / 关键 API 小结 / 延伸阅读" 8 节模板
